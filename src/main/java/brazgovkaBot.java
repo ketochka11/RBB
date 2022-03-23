@@ -4,6 +4,9 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageMedia;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -16,11 +19,14 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
 
 public class brazgovkaBot extends TelegramLongPollingBot {
+
+    private  final ModeService modeService = ModeService.getInstance();
 
     @Override
     public String getBotUsername() {
@@ -35,10 +41,48 @@ public class brazgovkaBot extends TelegramLongPollingBot {
     @Override
     @SneakyThrows
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage()){
+        if (update.hasCallbackQuery()){
+            handleCalldack(update.getCallbackQuery());
+        }else if (update.hasMessage()){
             handleMessage (update.getMessage());
         }
     }
+
+@SneakyThrows
+    private void handleCalldack(CallbackQuery callbackQuery) {
+    Message message = callbackQuery.getMessage();
+    String[] param = callbackQuery.getData().split(":");
+    String action = param[0];
+    Currency newCurrency = Currency.valueOf(param[1]);
+    switch (action) {
+        case "ORIGINAL" :
+            modeService.setOriginalCurrency(message.getChatId(), newCurrency);
+            break;
+
+        case "TARGET" :
+            modeService.setTargetCurrency(message.getChatId(), newCurrency);
+            break;
+    }
+    List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+    Currency originalCurrency = modeService.getOriginalCurrency(message.getChatId());
+    Currency targetCurrency = modeService.getTargetCurrency(message.getChatId());
+    for (Currency currency : Currency.values()){
+        buttons.add(Arrays.asList(
+                InlineKeyboardButton.builder()
+                        .text(getCurrencyButton(originalCurrency, currency))
+                        .callbackData("ORIGINAL:" + currency)
+                        .build(),
+                InlineKeyboardButton.builder()
+                        .text(getCurrencyButton(targetCurrency, currency))
+                        .callbackData("TARGET:" + currency)
+                        .build()
+        ));
+    }
+    execute(EditMessageReplyMarkup.builder()
+            .chatId(message.getChatId().toString())
+            .messageId(message.getMessageId())
+            .build());
+}
 
     @SneakyThrows
     private void handleMessage(Message message) {
@@ -50,23 +94,35 @@ public class brazgovkaBot extends TelegramLongPollingBot {
                 switch (command){
                     case "/show": /////////////////////////////
                         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+                        Currency originalCurrency = modeService.getOriginalCurrency(message.getChatId());
+                        Currency targetCurrency = modeService.getTargetCurrency(message.getChatId());
                         for (Currency currency : Currency.values()){
                             buttons.add(Arrays.asList(
-                                    InlineKeyboardButton.builder().text(currency.name()).build(),
-                                    InlineKeyboardButton.builder().text(currency.name()).build()
+                                    InlineKeyboardButton.builder()
+                                            .text(getCurrencyButton(originalCurrency, currency))
+                                            .callbackData("ORIGINAL:" + currency)
+                                            .build(),
+                                    InlineKeyboardButton.builder()
+                                            .text(getCurrencyButton(targetCurrency, currency))
+                                            .callbackData("TARGET:" + currency)
+                                            .build()
                             ));
                         }
                         execute(
                                 SendMessage.builder()
                                         .text("укажите валюту")///////////////
                                         .chatId(message.getChatId().toString())
-                                        .replyMarkup(InlineKeyboardMarkup.builder().keyboard().build())
+                                        .replyMarkup(InlineKeyboardMarkup.builder().keyboard(buttons).build())
                                         .build()
                         );
                     return;
                 }
             }
         }
+    }
+
+    private String getCurrencyButton(Currency saved, Currency current) {
+        return saved == current ? current + "☑" : current.getDisplayName();
     }
 
     @SneakyThrows

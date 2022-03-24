@@ -1,14 +1,16 @@
-import java.util.Currency;
+package service.impl;
+
+import entity.Currency;
+import service.CurrencyModeService;
 import java.util.HashMap;
 import java.util.Map;
 
-
-public class HashMapModeService implements ModeService {
+public class HashMapCurrencyModeService implements CurrencyModeService {
     private final Map<Long, Currency> originalCurrency = new HashMap<>();
     private final Map<Long, Currency> targetCurrency = new HashMap<>();
 
-    public HashMapModeService() {
-        System.out.println("Hashmap bot is created");
+    public HashMapCurrencyModeService() {
+        System.out.println("HASHMAP MODE is created");
     }
 
     @Override
@@ -22,12 +24,12 @@ public class HashMapModeService implements ModeService {
     }
 
     @Override
-    public Currency setOriginalCurrency(long chatId, Currency currency) {
-        return originalCurrency.put(chatId, currency);
+    public void setOriginalCurrency(long chatId, Currency currency) {
+        originalCurrency.put(chatId, currency);
     }
 
     @Override
-    public Currency setTargetCurrency(long chatId, Currency currency) {
-        return targetCurrency.put(chatId, currency);
+    public void setTargetCurrency(long chatId, Currency currency) {
+        targetCurrency.put(chatId, currency);
     }
 }

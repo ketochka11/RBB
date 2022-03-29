@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class brazgovkaBot extends TelegramLongPollingBot {
+public class BrazgovkaBot extends TelegramLongPollingBot {
 
     private  final CurrencyModeService currencyModeService = CurrencyModeService.getInstance();
     private final CurrencyConversionService currencyConversionService =
@@ -90,7 +90,7 @@ public class brazgovkaBot extends TelegramLongPollingBot {
             if (commandEntity.isPresent()){
                 String command = message.getText().substring(commandEntity.get().getOffset(), commandEntity.get().getLength());
                 switch (command){
-                    case "/show": /////////////////////////////
+                    case "/show":
                         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
                         Currency originalCurrency = currencyModeService.getOriginalCurrency(message.getChatId());
                         Currency targetCurrency = currencyModeService.getTargetCurrency(message.getChatId());
@@ -108,7 +108,7 @@ public class brazgovkaBot extends TelegramLongPollingBot {
                         }
                         execute(
                                 SendMessage.builder()
-                                        .text("укажите валюту")///////////////
+                                        .text("укажите валюту")
                                         .chatId(message.getChatId().toString())
                                         .replyMarkup(InlineKeyboardMarkup.builder().keyboard(buttons).build())
                                         .build()
@@ -151,7 +151,7 @@ public class brazgovkaBot extends TelegramLongPollingBot {
 
     @SneakyThrows
     public static void main(String[] args) {
-        brazgovkaBot bot = new brazgovkaBot();
+        BrazgovkaBot bot = new BrazgovkaBot();
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
         telegramBotsApi.registerBot(bot);
     }

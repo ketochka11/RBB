@@ -108,7 +108,7 @@ public class BrazgovkaBot extends TelegramLongPollingBot {
                         }
                         execute(
                                 SendMessage.builder()
-                                        .text("укажите валюту")
+                                        .text("укажите валюту из какой в какую переводить")
                                         .chatId(message.getChatId().toString())
                                         .replyMarkup(InlineKeyboardMarkup.builder().keyboard(buttons).build())
                                         .build()
@@ -129,7 +129,7 @@ public class BrazgovkaBot extends TelegramLongPollingBot {
                                 .chatId(message.getChatId().toString())
                                 .text(
                                         String.format(
-                                                "%4.2f %s это %4.2f %s",
+                                                "%4.4f %s это %4.4f %s",
                                                 value.get(), originalCurrency, (value.get() * ratio), targetCurrency))
                                 .build());
                 return;
